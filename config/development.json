@@ -1,0 +1,7 @@
+{
+  "name": "cns",
+  "mongoURI": "mongodb+srv://syed55:developer@cluster0.vqo8p.mongodb.net/cns?retryWrites=true&w=majority",
+  "sendgridKey": "SG.g_TR89cOQmC1YkjqmnpOOA.gxbhrPMYx5O41Wh659jd_3TW875mi5d50tf1lF9xT2",
+  "ACCESS_KEY_ID": "AKIAUDUENKGM74M5NUET",
+  "SECRET_KEY": "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"
+}

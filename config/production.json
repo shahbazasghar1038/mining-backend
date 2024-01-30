@@ -1,0 +1,7 @@
+{
+  "name": "cns",
+  "mongoURI": "mongodb+srv://syed55:developer@cluster0.vqo8p.mongodb.net/cns?retryWrites=true&w=majority",
+  "host": {
+    "mail": "prod-mail.server"
+  }
+}
