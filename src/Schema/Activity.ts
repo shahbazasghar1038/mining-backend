@@ -12,6 +12,7 @@ const ActivitySchema = new mongoose.Schema(
     ],
     status: String,
     amount: String,
+    email:String,
     type: String,
   },
   {
