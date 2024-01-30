@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Withdraw } from "../Schema/Clauses";
 import { Deposit } from "../Schema/Compony";
+import { Activity } from "../Schema/Activity";
 
 export const handleWithdrawal = async (req: Request, res: Response) => {
   try {
@@ -127,6 +128,11 @@ export const changeStatus = async (req: Request, res: Response) => {
       },
     );
     if (forms.modifiedCount > 0) {
+      const activity = new Activity(req.body);
+      await activity.save();
+      // return res
+      //   .status(200)
+      //   .json({ ok: true, message: "activity Created Successfully." });
       return res
         .status(200)
         .json({ ok: true, message: "withdraw status updated successfully" });
