@@ -93,7 +93,7 @@ const userSchema = new mongoose.Schema<IUserDocument>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.pre("save", function (next) {
@@ -123,7 +123,7 @@ userSchema.methods.getJWTToken = function () {
     process.env.JWT_SECRET!,
     {
       expiresIn: process.env.JWT_EXPIRE,
-    }
+    },
   );
 };
 
