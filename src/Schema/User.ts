@@ -23,6 +23,7 @@ export interface IUserDocument {
   resetPasswordExpire: Date;
   referralCode: string;
   referredUsers: string[];
+  referralProfitProcessed: boolean;
 }
 
 const userSchema = new mongoose.Schema<IUserDocument>(
@@ -83,6 +84,7 @@ const userSchema = new mongoose.Schema<IUserDocument>(
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    referralProfitProcessed: Boolean,
     referralCode: {
       type: String,
       unique: true, // Ensure the referral code is unique
@@ -91,7 +93,7 @@ const userSchema = new mongoose.Schema<IUserDocument>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 userSchema.pre("save", function (next) {
@@ -121,7 +123,7 @@ userSchema.methods.getJWTToken = function () {
     process.env.JWT_SECRET!,
     {
       expiresIn: process.env.JWT_EXPIRE,
-    },
+    }
   );
 };
 

@@ -16,11 +16,11 @@ const s3 = new AWS.S3();
 async function uploadBase64ImageToS3(
   base64Image: string,
   bucketName: string,
-  imageName: string,
+  imageName: string
 ): Promise<string> {
   const buffer = Buffer.from(
     base64Image.replace(/^data:image\/\w+;base64,/, ""),
-    "base64",
+    "base64"
   );
 
   const uploadParams: AWS.S3.PutObjectRequest = {
@@ -51,7 +51,7 @@ export const createCompany = async (req: Request, res: Response) => {
       imageUrl = await uploadBase64ImageToS3(
         req.body.image,
         "your-s3-bucket-name",
-        imageName,
+        imageName
       );
 
       req.body.image = imageUrl;
@@ -75,75 +75,91 @@ export const createCompany = async (req: Request, res: Response) => {
 
 const updateDailyProfitForUsers = async () => {
   try {
-    console.log("yes");
+    console.log("Updating daily profits and processing referral profits");
 
-    // Fetch all users or a subset as per your requirement
-    const users = await UserModel.find({
-      /* Your criteria for selecting users, if any */
-    });
-    // console.log(users, "users");
+    // Fetch all users
+    const users = await UserModel.find({});
 
     for (const user of users) {
-      // Fetch companies associated with this user
-      const companies = await Deposit.find({
+      // Process daily profits for approved deposits
+      const approvedDeposits = await Deposit.find({
         id: user._id,
         status: "approved",
       });
 
-      for (const company of companies) {
-        const profitt = parseFloat(company.amount) * 0.03; // 3% of the amount
-        console.log(profitt, "profit");
+      for (const deposit of approvedDeposits) {
+        const dailyProfit = parseFloat(deposit.amount) * 0.03;
+        deposit.profit = (parseFloat(deposit.profit) + dailyProfit).toFixed(2); // Convert the sum back to a string
+        await deposit.save();
+        console.log(deposit.profit, deposit.email, "deposit");
+      }
 
-        const newAmount = parseFloat(company.profit) + profitt;
-        console.log(newAmount, "newAmount");
+      // Process referral profit
+      if (user.referralCode && !user.referralProfitProcessed) {
+        const firstApprovedDeposit = await Deposit.findOne({
+          userId: user._id,
+          status: "approved",
+        }).sort({ createdAt: 1 }); // Get the first approved deposit
 
-        // Update the company with the new amount
-        await Deposit.updateOne(
-          { _id: company._id },
-          {
-            $set: {
-              profit: newAmount.toFixed(2),
-            },
-          },
-        );
+        if (firstApprovedDeposit) {
+          const referralProfit = parseFloat(firstApprovedDeposit.amount) * 0.03; // Calculate referral profit
+
+          const referrer = await UserModel.findOne({
+            referralCode: user.referralCode,
+          });
+          if (referrer) {
+            const referrerDeposit = await Deposit.findOne({
+              userId: referrer._id,
+            }).sort({ createdAt: -1 }); // Get the referrer's latest deposit
+
+            if (referrerDeposit) {
+              referrerDeposit.profit = (
+                parseFloat(referrerDeposit.profit) + referralProfit
+              ).toFixed(2); // Convert to string
+              await referrerDeposit.save();
+              console.log(referrerDeposit.profit, " referrerDeposit.profit");
+
+              // Mark that the referral profit has been processed for this user
+              user.referralProfitProcessed = true;
+              await user.save();
+            }
+          }
+        }
       }
     }
-
-    console.log(
-      "Daily profit updated for all approved companies of each user.",
-    );
+    console.log("Daily and referral profits updated successfully.");
   } catch (error: any) {
-    console.error("Failed to update daily profit for users:", error.message);
+    console.error("Failed to update profits:", error.message);
   }
 };
 
 // Schedule the task to run at midnight every day (00:00)
-cron.schedule(
-  "0 0 * * *",
-  () => {
-    console.log("Running the daily profit update job for users.");
-    updateDailyProfitForUsers();
-  },
-  {
-    scheduled: true,
-    timezone: "Asia/Karachi",
-    // timezone: "Asia/Dubai", // Set to Atyrau time zone
-  },
-);
-
 // cron.schedule(
-//   "*/30 * * * * *",
+//   "0 0 * * *",
 //   () => {
-//     console.log(
-//       "Running the daily profit update job for users every 30 seconds.",
-//     );
+//     console.log("Running the daily profit update job for users.");
 //     updateDailyProfitForUsers();
 //   },
 //   {
 //     scheduled: true,
-//     timezone: "Asia/Karachi", // Set to Pakistan's timezone
-//   },
+//     timezone: "Asia/Karachi",
+//     // timezone: "Asia/Dubai", // Set to Atyrau time zone
+//   }
 // );
+
+cron.schedule(
+  "*/30 * * * * *",
+  () => {
+    console.log(
+      "Running the daily profit update job for users every 30 seconds."
+    );
+    updateDailyProfitForUsers();
+  },
+  {
+    scheduled: true,
+    timezone: "Asia/Karachi", // Set to Pakistan's timezone
+  }
+);
 
 export const getAllCompaniesbyId = async (req: Request, res: Response) => {
   try {
@@ -188,7 +204,7 @@ export const changeStatus = async (req: Request, res: Response) => {
         $set: {
           status: req.body.status,
         },
-      },
+      }
     );
     if (forms.modifiedCount > 0) {
       const activity = new Activity(req.body);
@@ -224,7 +240,7 @@ export const updateCompany = async (req: Request, res: Response) => {
       imageUrl = await uploadBase64ImageToS3(
         req.body.image,
         "your-s3-bucket-name",
-        imageName,
+        imageName
       );
 
       req.body.image = imageUrl;
@@ -235,7 +251,7 @@ export const updateCompany = async (req: Request, res: Response) => {
     const company = await Deposit.findOneAndUpdate(
       { id: req.params.id },
       req.body,
-      { new: true },
+      { new: true }
     );
     if (!company) {
       return res.status(400).send("Company not found");
