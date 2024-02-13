@@ -26,6 +26,7 @@ import categories from "./routes/categories";
 import health from "./routes/health";
 import company from "./routes/compony";
 import activity from "./routes/activty";
+import adminWallet from "./routes/adminWallet";
 
 const PORT: number = config.get<number>("port");
 const MONGOURI = "mongodb+srv://shahbaz:12341234@cluster0.h8ldlbc.mongodb.net/";
@@ -62,6 +63,7 @@ app.use("/api/v1/contracts", contracts);
 app.use("/api/v1/categories", categories);
 app.use("/api/v1/deposit", company);
 app.use("/api/v1/activity", activity);
+app.use('/api/v1/adminWallet', adminWallet);
 
 if (!config.get("jwtPrivateKey")) {
   log.error("FATAL ERROR: jwtPrivateKey is not defined");
