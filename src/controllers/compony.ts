@@ -72,7 +72,6 @@ export const createCompany = async (req: Request, res: Response) => {
     });
   }
 };
-
 const updateDailyProfitForUsers = async () => {
   try {
     console.log("Updating daily profits and processing referral profits");
@@ -88,21 +87,14 @@ const updateDailyProfitForUsers = async () => {
       });
 
       for (const deposit of approvedDeposits) {
-        const dailyProfit = parseFloat(deposit.amount) * 0.03;
+        const dailyProfit = parseFloat(deposit.amount) * 0.05;
         deposit.profit = (parseFloat(deposit.profit) + dailyProfit).toFixed(2); // Convert the sum back to a string
         await deposit.save();
         console.log(deposit.profit, deposit.email, "deposit");
-      }
 
-      // Process referral profit
-      if (user.referralCode && !user.referralProfitProcessed) {
-        const firstApprovedDeposit = await Deposit.findOne({
-          userId: user._id,
-          status: "approved",
-        }).sort({ createdAt: 1 }); // Get the first approved deposit
-
-        if (firstApprovedDeposit) {
-          const referralProfit = parseFloat(firstApprovedDeposit.amount) * 0.03; // Calculate referral profit
+        // Process referral profit for the referrer if the user has a referrer
+        if (user.referralCode) {
+          const referralProfit = dailyProfit * 0.10; // 10% of the daily profit
 
           const referrer = await UserModel.findOne({
             referralCode: user.referralCode,
@@ -110,6 +102,7 @@ const updateDailyProfitForUsers = async () => {
           if (referrer) {
             const referrerDeposit = await Deposit.findOne({
               userId: referrer._id,
+              status: "approved",
             }).sort({ createdAt: -1 }); // Get the referrer's latest deposit
 
             if (referrerDeposit) {
@@ -117,11 +110,7 @@ const updateDailyProfitForUsers = async () => {
                 parseFloat(referrerDeposit.profit) + referralProfit
               ).toFixed(2); // Convert to string
               await referrerDeposit.save();
-              console.log(referrerDeposit.profit, " referrerDeposit.profit");
-
-              // Mark that the referral profit has been processed for this user
-              user.referralProfitProcessed = true;
-              await user.save();
+              console.log(referrerDeposit.profit, "referrerDeposit.profit");
             }
           }
         }
@@ -143,7 +132,7 @@ cron.schedule(
   {
     scheduled: true,
     timezone: "Asia/Karachi",
-    // timezone: "Asia/Dubai", // Set to Atyrau time zone
+    // Adjust the timezone as needed
   },
 );
 
